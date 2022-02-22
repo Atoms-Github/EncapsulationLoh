@@ -18,6 +18,20 @@ def process_mod(mod_dir):
             for line in file_lines:
                 lines.append(line.strip("\n"))
 
+    if "test_dir" in mod_dir:
+        i = 2
+    for line in list(lines):
+        if line.startswith("pub mod ") and line.endswith(";"):
+            filename = line[8:-1]
+            potential_filename = mod_dir + "/" + filename + ".rs"
+            if not os.path.exists(potential_filename):
+                for removable in [f"mod {filename};", f"pub mod {filename};", f"pub use {filename}::*;"]:
+                    try:
+                        lines.remove(removable)
+                    except:
+                        pass
+
+
     filenames = next(os.walk(mod_dir), (None, None, []))[2]
     for file in filenames:
         if file == "mod.rs":
@@ -62,11 +76,10 @@ def main():
         process_mod(target)
     for root, subdirs, files in list(os.walk(target))[1:]:
         process_mod(root)
-        print(root)
         for file in files:
             if file.endswith(".rs") and file != "mod.rs":
                 process_file(root + "/" + file)
-
+    print("Done.")
 
 if __name__ == '__main__':
     main()
